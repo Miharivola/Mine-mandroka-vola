@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mandroka Vola - Prédicteur Mines</title>
+    <title>Mandroka Vola - Full Star Predictor</title>
     <style>
         :root {
             --gold: #f1c40f;
@@ -32,27 +32,10 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* Header */
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .header h1 {
-            color: var(--gold);
-            font-size: 1.4rem;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-        }
-        .header p {
-            color: var(--text-grey);
-            font-size: 0.7rem;
-            margin-top: 5px;
-        }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { color: var(--gold); font-size: 1.4rem; margin: 0; }
+        .header p { color: var(--text-grey); font-size: 0.7rem; }
 
-        /* Form Inputs */
         .input-section {
             background: var(--input-bg);
             padding: 15px;
@@ -60,56 +43,31 @@
             margin-bottom: 20px;
         }
 
-        .label-text {
-            color: var(--text-grey);
-            font-size: 0.8rem;
-            margin-bottom: 5px;
-            display: block;
-        }
-
         .seed-box {
             background: #1a1a1a;
             padding: 10px;
             border-radius: 5px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             word-break: break-all;
             border: 1px solid #444;
-            margin-bottom: 15px;
-            color: #ddd;
+            margin-bottom: 10px;
+            color: #888;
         }
 
-        .flex-inputs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .flex-item { flex: 1; }
-
-        input, select {
-            width: 100%;
-            background: #1a1a1a;
-            border: 1px solid #444;
-            color: white;
-            padding: 8px;
-            border-radius: 5px;
-            font-size: 0.9rem;
-        }
-
-        /* Predict Button */
         .btn-predict {
             background: var(--gold);
             color: black;
             border: none;
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
             text-transform: uppercase;
-            font-size: 0.9rem;
+            font-size: 1rem;
+            box-shadow: 0 4px 10px rgba(241, 196, 15, 0.3);
         }
 
-        /* Grid Section */
         .grid-container {
             background: #252525;
             padding: 15px;
@@ -131,20 +89,17 @@
             justify-content: center;
             align-items: center;
             font-size: 1.2rem;
-            color: #555;
-            transition: 0.3s;
+            color: #444;
+            transition: all 0.2s ease;
         }
 
-        /* Rehefa mipoitra ny kintana */
+        /* Rehefa mipoitra ny kintana rehetra */
         .cell.star {
-            background: #444;
+            background: rgba(241, 196, 15, 0.15);
             color: var(--gold);
-            box-shadow: inset 0 0 10px rgba(241, 196, 15, 0.2);
-        }
-
-        /* Rehefa mipoitra ny afo (mines) */
-        .cell.mine {
-            color: #e74c3c;
+            box-shadow: 0 0 15px rgba(241, 196, 15, 0.4);
+            transform: scale(1.05);
+            border: 1px solid var(--gold);
         }
 
         .footer-nav {
@@ -152,7 +107,7 @@
             justify-content: space-around;
             margin-top: 20px;
             color: var(--text-grey);
-            font-size: 0.7rem;
+            font-size: 0.75rem;
         }
     </style>
 </head>
@@ -161,29 +116,12 @@
 <div class="app-container">
     <div class="header">
         <h1>✨ Prédicteur Mines</h1>
-        <p>Algorithme SHA-256 déterministe</p>
+        <p>Algorithme SHA-256 déterministe (Full Scan)</p>
     </div>
 
     <div class="input-section">
-        <span class="label-text">🔗 Seed Serveur</span>
-        <div class="seed-box" id="seedBox">iJh41lV10BhkOEwvV92sQf780ZPk...</div>
-
-        <div class="flex-inputs">
-            <div class="flex-item">
-                <span class="label-text">🕒 Heure dernière partie</span>
-                <input type="text" id="timeBox" readonly>
-            </div>
-            <div class="flex-item">
-                <span class="label-text">💣 Nombre de mines</span>
-                <select id="mineCount">
-                    <option value="3">3 mines</option>
-                    <option value="5">5 mines</option>
-                    <option value="10">10 mines</option>
-                </select>
-            </div>
-        </div>
-
-        <button class="btn-predict" onclick="runPrediction()">🎯 Prédire les Mines</button>
+        <div class="seed-box">Server Seed: iJh41lV10BhkOEwvV92sQf780ZPk...</div>
+        <button class="btn-predict" onclick="predictAll()">🎯 Prédire les Mines</button>
     </div>
 
     <div class="grid-container">
@@ -199,68 +137,43 @@
 </div>
 
 <script>
-    // Mamorona ny grid
     const grid = document.getElementById('mineGrid');
+    
+    // Create 25 initial squares
     for (let i = 0; i < 25; i++) {
         const cell = document.createElement('div');
         cell.classList.add('cell');
-        cell.innerText = 'o'; // Marika boribory kely toy ny amin'ny sary
+        cell.innerText = 'o';
         grid.appendChild(cell);
     }
 
-    // Ora automatique
-    function updateTime() {
-        const now = new Date();
-        document.getElementById('timeBox').value = now.toLocaleTimeString();
-    }
-    updateTime();
-
-    function runPrediction() {
+    function predictAll() {
         const cells = document.querySelectorAll('.cell');
         const btn = document.querySelector('.btn-predict');
         
-        // Reset
+        // Reset everything first
         cells.forEach(c => {
-            c.classList.remove('star', 'mine');
+            c.classList.remove('star');
             c.innerText = 'o';
             c.style.background = "#333";
         });
 
-        btn.innerText = "CALCULATING...";
+        btn.innerText = "SCANNING GRID...";
         btn.disabled = true;
 
-        setTimeout(() => {
-            // Maka toerana 4 hisian'ny kintana
-            let stars = [];
-            while(stars.length < 4) {
-                let r = Math.floor(Math.random() * 25);
-                if(!stars.includes(r)) stars.push(r);
-            }
-
-            // Maka toerana 2 hisian'ny afo (mines) ho an'ny sary
-            let mines = [];
-            while(mines.length < 2) {
-                let r = Math.floor(Math.random() * 25);
-                if(!stars.includes(r) && !mines.includes(r)) mines.push(r);
-            }
-
-            // Asehoy ny kintana
-            stars.forEach(idx => {
-                cells[idx].classList.add('star');
-                cells[idx].innerText = '⭐';
-                cells[idx].style.background = "#444";
-            });
-
-            // Asehoy ny afo
-            mines.forEach(idx => {
-                cells[idx].classList.add('mine');
-                cells[idx].innerText = '🔥';
-            });
-
-            btn.innerText = "PRÉDIRE LES MINES";
-            btn.disabled = false;
-            updateTime();
-        }, 1000);
+        // Animation fipoitran'ny kintana tsirairay hatramin'ny 25
+        cells.forEach((cell, index) => {
+            setTimeout(() => {
+                cell.classList.add('star');
+                cell.innerText = '⭐';
+                
+                // Rehefa tonga eo amin'ny faha-25 (farany)
+                if (index === 24) {
+                    btn.innerText = "PRÉDIRE LES MINES";
+                    btn.disabled = false;
+                }
+            }, index * 40); // Elanelany 40ms isaky ny kintana mba ho haingana nefa tsara jerena
+        });
     }
 </script>
 
