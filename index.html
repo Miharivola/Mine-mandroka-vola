@@ -31,7 +31,6 @@
             max-width: 400px;
         }
 
-        /* Header Style */
         .app-header {
             text-align: center;
             margin-bottom: 20px;
@@ -47,7 +46,6 @@
 
         .subtitle { color: var(--text-gray); font-size: 0.8rem; letter-spacing: 2px; }
 
-        /* Card Base */
         .card {
             background: var(--card-bg);
             border-radius: 20px;
@@ -57,7 +55,6 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* Inputs & Buttons */
         .input-group { margin-bottom: 12px; }
         label { display: block; font-size: 0.75rem; color: var(--gold); margin-bottom: 5px; font-weight: bold; }
         
@@ -83,16 +80,12 @@
             color: #000;
             cursor: pointer;
             text-transform: uppercase;
-            transition: 0.3s;
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 10px;
         }
 
-        .btn-main:active { transform: scale(0.98); }
-
-        /* Progress Bar */
         .progress-container {
             width: 100%;
             height: 6px;
@@ -100,7 +93,7 @@
             border-radius: 10px;
             margin-top: 15px;
             overflow: hidden;
-            display: none; /* Afenina aloha */
+            display: none;
         }
 
         .progress-bar {
@@ -108,10 +101,8 @@
             height: 100%;
             background: var(--gold);
             box-shadow: 0 0 10px var(--gold);
-            transition: width 0.1s;
         }
 
-        /* Mines Grid */
         .mines-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -131,7 +122,6 @@
             align-items: center;
             font-size: 1.1rem;
             color: rgba(255,255,255,0.05);
-            transition: 0.3s;
         }
 
         .cell.star {
@@ -142,7 +132,6 @@
             animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* History */
         .history-list { max-height: 150px; overflow-y: auto; margin-top: 10px; }
         .history-item {
             background: #222;
@@ -155,7 +144,6 @@
             font-size: 0.85rem;
         }
 
-        /* Tutorial */
         .step { display: flex; gap: 12px; margin-bottom: 12px; }
         .step-icon {
             background: var(--gold);
@@ -164,14 +152,12 @@
             display: flex; justify-content: center; align-items: center;
             font-weight: bold; font-size: 0.8rem; flex-shrink: 0;
         }
-        .step p { font-size: 0.85rem; color: #ccc; line-height: 1.4; }
+        .step p { font-size: 0.85rem; color: #ccc; }
 
         @keyframes pop {
             0% { transform: scale(0); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
-
-        .badge { background: #333; padding: 2px 8px; border-radius: 5px; font-size: 0.6rem; vertical-align: middle; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -190,8 +176,8 @@
 
         <div class="grid-inputs">
             <div class="input-group" style="flex: 2;">
-                <label><i class="fas fa-clock"></i> ORA</label>
-                <input type="text" id="currentTime" readonly value="00:00:00">
+                <label><i class="fas fa-clock"></i> ORA (24H)</label>
+                <input type="text" id="currentTime" placeholder="HH:MM:SS">
             </div>
             <div class="input-group" style="flex: 1;">
                 <label><i class="fas fa-bomb"></i> MINES</label>
@@ -199,6 +185,9 @@
                     <option value="1">1</option>
                     <option value="3" selected>3</option>
                     <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
                 </select>
             </div>
         </div>
@@ -211,8 +200,7 @@
             <div class="progress-bar" id="progBar"></div>
         </div>
 
-        <div class="mines-grid" id="minesGrid">
-            </div>
+        <div class="mines-grid" id="minesGrid"></div>
     </div>
 
     <div class="card">
@@ -230,15 +218,15 @@
         </h3>
         <div class="step">
             <div class="step-icon">1</div>
-            <p>Kopiavo ny <strong>Server Seed</strong> avy amin'ny lalao Mines (1xbet/Betify) ary apetraho eo ambony.</p>
+            <p>Kopiavo ny <strong>Server Seed</strong> avy amin'ny lalao Mines ary apetraho eo ambony.</p>
         </div>
         <div class="step">
             <div class="step-icon">2</div>
-            <p>Fidio ny isan'ny Mines mifanaraka amin'ny filokanao.</p>
+            <p>Azonao ovaina ny <strong>Ora</strong> raha ilaina izany mba hifanaraka amin'ny lalao.</p>
         </div>
         <div class="step">
             <div class="step-icon">3</div>
-            <p>Tsindrio ny <strong>Predict</strong>, ary araho ireo sela misy kintana volamena (⭐).</p>
+            <p>Tsindrio ny <strong>Predict</strong>, ary araho ireo kintana volamena.</p>
         </div>
     </div>
 </div>
@@ -250,15 +238,13 @@
         const progContainer = document.getElementById('progContainer');
         const progBar = document.getElementById('progBar');
         const historyList = document.getElementById('historyList');
+        const timeInput = document.getElementById('currentTime');
 
-        // --- 1. AUDIO SYSTEM (Web Audio API) ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSfx(type) {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
+            osc.connect(gain); gain.connect(audioCtx.destination);
             if(type === 'click') {
                 osc.frequency.setValueAtTime(500, audioCtx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
@@ -272,7 +258,6 @@
             }
         }
 
-        // --- 2. GRID INITIALIZATION ---
         function createGrid() {
             grid.innerHTML = '';
             for (let i = 0; i < 25; i++) {
@@ -284,38 +269,39 @@
         }
         createGrid();
 
-        // --- 3. CLOCK ---
-        setInterval(() => {
+        // Fametrahana ny ora amin'ny format 24h amin'ny voalohany
+        function updateDefaultTime() {
             const now = new Date();
-            document.getElementById('currentTime').value = now.toLocaleTimeString();
-        }, 1000);
+            // Format 24h: HH:MM:SS
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            timeInput.value = `${h}:${m}:${s}`;
+        }
+        updateDefaultTime();
 
-        // --- 4. PREDICTION LOGIC ---
         btn.addEventListener('click', () => {
             if (btn.disabled) return;
-            
             playSfx('click');
             btn.disabled = true;
             progContainer.style.display = 'block';
             
-            // Reset Grid
             const cells = document.querySelectorAll('.cell');
             cells.forEach(c => {
                 c.classList.remove('star');
                 c.innerHTML = '<i class="fas fa-circle" style="font-size: 0.5rem"></i>';
             });
 
-            // Progress Bar Animation
             let width = 0;
             const interval = setInterval(() => {
                 if (width >= 100) {
                     clearInterval(interval);
                     startStarAnimation();
                 } else {
-                    width += 5;
+                    width += 10;
                     progBar.style.width = width + '%';
                 }
-            }, 50);
+            }, 30);
 
             function startStarAnimation() {
                 progContainer.style.display = 'none';
@@ -324,10 +310,11 @@
 
                 const count = parseInt(document.getElementById('mineCount').value);
                 let found = 0;
-                const target = count + 2; // Fanampiana kely ho an'ny fisehony
+                // Raha kely ny mines dia kintana 3 no mivoaka, raha be dia be kokoa
+                const target = count < 5 ? count + 2 : count; 
 
                 const showNextStar = () => {
-                    if (found < target) {
+                    if (found < target && found < 25) {
                         let r = Math.floor(Math.random() * 25);
                         if (!cells[r].classList.contains('star')) {
                             setTimeout(() => {
@@ -336,13 +323,9 @@
                                 playSfx('star');
                                 found++;
                                 showNextStar();
-                            }, 150);
-                        } else {
-                            showNextStar();
-                        }
-                    } else {
-                        updateHistory(count);
-                    }
+                            }, 100);
+                        } else { showNextStar(); }
+                    } else { updateHistory(count); }
                 };
                 showNextStar();
             }
@@ -352,7 +335,8 @@
             if (historyList.querySelector('p')) historyList.innerHTML = '';
             const item = document.createElement('div');
             item.className = 'history-item';
-            item.innerHTML = `<span>${new Date().toLocaleTimeString()}</span> <span style="color:var(--gold)">Mines: ${m} ✓</span>`;
+            // Mampiasa ny ora ao anaty input fa tsy ny ora mivantana intsony
+            item.innerHTML = `<span>${timeInput.value}</span> <span style="color:var(--gold)">Mines: ${m} ✓</span>`;
             historyList.prepend(item);
         }
     });
