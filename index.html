@@ -3,188 +3,359 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prédicteur Mines - Full Interactive</title>
+    <title>Mandroka Vola - Predictor Mines Premium</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --gold: #f1c40f;
-            --dark-bg: #121212;
-            --card-bg: #1e1e1e;
-            --input-bg: #2d2d2d;
-            --text-grey: #a0a0a0;
+            --gold: #ffd700;
+            --gold-dark: #b8860b;
+            --dark-bg: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --input-bg: #252525;
+            --text-gray: #b0b0b0;
         }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             background-color: var(--dark-bg);
             color: white;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             justify-content: center;
-            padding: 20px;
-            margin: 0;
-        }
-
-        .app-container {
-            width: 100%;
-            max-width: 380px;
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid #333;
-        }
-
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { color: var(--gold); font-size: 1.4rem; margin: 0; }
-        .header p { color: var(--text-grey); font-size: 0.7rem; }
-
-        .input-section {
-            background: var(--input-bg);
             padding: 15px;
-            border-radius: 12px;
+        }
+
+        .mandroka-container {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* Header Style */
+        .app-header {
+            text-align: center;
             margin-bottom: 20px;
         }
 
-        .seed-box {
-            background: #1a1a1a;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 0.7rem;
-            word-break: break-all;
-            border: 1px solid #444;
-            margin-bottom: 12px;
-            color: #888;
-        }
-
-        .btn-predict {
-            background: var(--gold);
-            color: black;
-            border: none;
-            width: 100%;
-            padding: 15px;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
+        .gold-text {
+            background: linear-gradient(135deg, #ffd700, #b8860b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
             text-transform: uppercase;
-            font-size: 0.9rem;
-            margin-bottom: 10px;
         }
 
-        .grid-container {
-            background: #252525;
+        .subtitle { color: var(--text-gray); font-size: 0.8rem; letter-spacing: 2px; }
+
+        /* Card Base */
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 18px;
+            margin-bottom: 15px;
+            border: 1px solid #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* Inputs & Buttons */
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 0.75rem; color: var(--gold); margin-bottom: 5px; font-weight: bold; }
+        
+        input, select {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid #444;
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .grid-inputs { display: flex; gap: 10px; }
+
+        .btn-main {
+            width: 100%;
+            background: linear-gradient(45deg, var(--gold-dark), var(--gold));
+            border: none;
             padding: 15px;
             border-radius: 12px;
+            font-weight: bold;
+            color: #000;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
         }
 
-        .grid {
+        .btn-main:active { transform: scale(0.98); }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: #111;
+            border-radius: 10px;
+            margin-top: 15px;
+            overflow: hidden;
+            display: none; /* Afenina aloha */
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--gold);
+            box-shadow: 0 0 10px var(--gold);
+            transition: width 0.1s;
+        }
+
+        /* Mines Grid */
+        .mines-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 8px;
+            margin-top: 15px;
+            padding: 10px;
+            background: #0a0a0a;
+            border-radius: 12px;
         }
 
-        /* Ny kianja tsirairay dia bokotra azo ampidirana zavatra */
         .cell {
-            aspect-ratio: 1/1;
-            background: #333;
+            aspect-ratio: 1;
+            background: #2c3e50;
             border-radius: 8px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.2rem;
-            color: #444;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid transparent;
-            outline: none;
-            padding: 0;
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.05);
+            transition: 0.3s;
         }
 
-        /* Rehefa mipoitra ny kintana nampidirinao */
-        .cell.active-star {
-            background: rgba(241, 196, 15, 0.1);
+        .cell.star {
+            background: rgba(255, 215, 0, 0.15);
+            border: 2px solid var(--gold);
             color: var(--gold);
-            border: 1px solid var(--gold);
-            box-shadow: 0 0 10px rgba(241, 196, 15, 0.2);
+            text-shadow: 0 0 10px var(--gold);
+            animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* Rehefa mipoitra ny mine (afo) nampidirinao */
-        .cell.active-mine {
-            background: rgba(231, 76, 60, 0.1);
-            color: #e74c3c;
-            border: 1px solid #e74c3c;
-        }
-
-        .footer-nav {
+        /* History */
+        .history-list { max-height: 150px; overflow-y: auto; margin-top: 10px; }
+        .history-item {
+            background: #222;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 5px;
             display: flex;
-            justify-content: space-around;
-            margin-top: 25px;
-            color: var(--text-grey);
-            font-size: 0.8rem;
+            justify-content: space-between;
+            border-left: 3px solid var(--gold);
+            font-size: 0.85rem;
         }
 
-        .hint {
-            font-size: 0.7rem;
-            color: var(--text-grey);
-            margin-top: 5px;
-            text-align: center;
+        /* Tutorial */
+        .step { display: flex; gap: 12px; margin-bottom: 12px; }
+        .step-icon {
+            background: var(--gold);
+            color: #000;
+            width: 22px; height: 22px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-weight: bold; font-size: 0.8rem; flex-shrink: 0;
         }
+        .step p { font-size: 0.85rem; color: #ccc; line-height: 1.4; }
+
+        @keyframes pop {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .badge { background: #333; padding: 2px 8px; border-radius: 5px; font-size: 0.6rem; vertical-align: middle; margin-left: 5px; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div class="header">
-        <h1>✨ Prédicteur Mines</h1>
-        <p>Algorithme SHA-256 déterministe (Full Scan)</p>
-    </div>
+<div class="mandroka-container">
+    <header class="app-header">
+        <h1 class="gold-text"><i class="fas fa-gem"></i> MANDROKA VOLA</h1>
+        <p class="subtitle">ALGORITHM PREDICTOR v2.0</p>
+    </header>
 
-    <div class="input-section">
-        <div class="seed-box">Server Seed: iJh41lV10BhkOEwvV92sQf780ZPk...</div>
-        <button class="btn-predict" onclick="resetGrid()">🔄 RESET GRID</button>
-        <div class="hint">Kitiho ny kianja mba hampidirana kintana</div>
-    </div>
+    <div class="card">
+        <div class="input-group">
+            <label><i class="fas fa-key"></i> SEED SERVEUR</label>
+            <input type="text" id="seedInput" value="SHA256-ID-892c-b7fcd0b6bc88">
+        </div>
 
-    <div class="grid-container">
-        <div class="grid" id="mineGrid">
+        <div class="grid-inputs">
+            <div class="input-group" style="flex: 2;">
+                <label><i class="fas fa-clock"></i> ORA</label>
+                <input type="text" id="currentTime" readonly value="00:00:00">
+            </div>
+            <div class="input-group" style="flex: 1;">
+                <label><i class="fas fa-bomb"></i> MINES</label>
+                <select id="mineCount">
+                    <option value="1">1</option>
+                    <option value="3" selected>3</option>
+                    <option value="5">5</option>
+                </select>
+            </div>
+        </div>
+
+        <button id="btnPredict" class="btn-main">
+            <i class="fas fa-wand-magic-sparkles"></i> PRÉDIRE LES MINES
+        </button>
+
+        <div class="progress-container" id="progContainer">
+            <div class="progress-bar" id="progBar"></div>
+        </div>
+
+        <div class="mines-grid" id="minesGrid">
             </div>
     </div>
 
-    <div class="footer-nav">
-        <span>🏠 Accueil</span>
-        <span style="color: var(--gold);">🔮 Prédicteur</span>
-        <span>📞 Contact</span>
+    <div class="card">
+        <h3 class="gold-text" style="font-size: 0.9rem; margin-bottom: 10px;">
+            <i class="fas fa-history"></i> TANTARAN'NY PREDICTION
+        </h3>
+        <div id="historyList" class="history-list">
+            <p style="text-align: center; color: #555; font-size: 0.8rem;">Tsy mbola misy data...</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 class="gold-text" style="font-size: 0.9rem; margin-bottom: 15px;">
+            <i class="fas fa-book"></i> FOMBA FAMPIASANA AZY
+        </h3>
+        <div class="step">
+            <div class="step-icon">1</div>
+            <p>Kopiavo ny <strong>Server Seed</strong> avy amin'ny lalao Mines (1xbet/Betify) ary apetraho eo ambony.</p>
+        </div>
+        <div class="step">
+            <div class="step-icon">2</div>
+            <p>Fidio ny isan'ny Mines mifanaraka amin'ny filokanao.</p>
+        </div>
+        <div class="step">
+            <div class="step-icon">3</div>
+            <p>Tsindrio ny <strong>Predict</strong>, ary araho ireo sela misy kintana volamena (⭐).</p>
+        </div>
     </div>
 </div>
 
 <script>
-    const grid = document.getElementById('mineGrid');
+    document.addEventListener('DOMContentLoaded', () => {
+        const grid = document.getElementById('minesGrid');
+        const btn = document.getElementById('btnPredict');
+        const progContainer = document.getElementById('progContainer');
+        const progBar = document.getElementById('progBar');
+        const historyList = document.getElementById('historyList');
 
-    // Hamorona kianja 25 azo kitihina mivantana
-    for (let i = 0; i < 25; i++) {
-        const cell = document.createElement('button');
-        cell.classList.add('cell');
-        cell.innerText = 'o';
-        
-        // Rehefa kitihina ny kianja iray dia afaka ampidirana kintana
-        cell.onclick = function() {
-            if (!this.classList.contains('active-star')) {
-                this.classList.add('active-star');
-                this.innerText = '⭐';
+        // --- 1. AUDIO SYSTEM (Web Audio API) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSfx(type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if(type === 'click') {
+                osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
             } else {
-                this.classList.remove('active-star');
-                this.innerText = 'o';
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(800 + Math.random()*200, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
             }
-        };
+        }
 
-        grid.appendChild(cell);
-    }
+        // --- 2. GRID INITIALIZATION ---
+        function createGrid() {
+            grid.innerHTML = '';
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.innerHTML = '<i class="fas fa-circle" style="font-size: 0.5rem"></i>';
+                grid.appendChild(cell);
+            }
+        }
+        createGrid();
 
-    function resetGrid() {
-        const cells = document.querySelectorAll('.cell');
-        cells.forEach(c => {
-            c.classList.remove('active-star', 'active-mine');
-            c.innerText = 'o';
+        // --- 3. CLOCK ---
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('currentTime').value = now.toLocaleTimeString();
+        }, 1000);
+
+        // --- 4. PREDICTION LOGIC ---
+        btn.addEventListener('click', () => {
+            if (btn.disabled) return;
+            
+            playSfx('click');
+            btn.disabled = true;
+            progContainer.style.display = 'block';
+            
+            // Reset Grid
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(c => {
+                c.classList.remove('star');
+                c.innerHTML = '<i class="fas fa-circle" style="font-size: 0.5rem"></i>';
+            });
+
+            // Progress Bar Animation
+            let width = 0;
+            const interval = setInterval(() => {
+                if (width >= 100) {
+                    clearInterval(interval);
+                    startStarAnimation();
+                } else {
+                    width += 5;
+                    progBar.style.width = width + '%';
+                }
+            }, 50);
+
+            function startStarAnimation() {
+                progContainer.style.display = 'none';
+                progBar.style.width = '0%';
+                btn.disabled = false;
+
+                const count = parseInt(document.getElementById('mineCount').value);
+                let found = 0;
+                const target = count + 2; // Fanampiana kely ho an'ny fisehony
+
+                const showNextStar = () => {
+                    if (found < target) {
+                        let r = Math.floor(Math.random() * 25);
+                        if (!cells[r].classList.contains('star')) {
+                            setTimeout(() => {
+                                cells[r].classList.add('star');
+                                cells[r].innerHTML = '<i class="fas fa-star"></i>';
+                                playSfx('star');
+                                found++;
+                                showNextStar();
+                            }, 150);
+                        } else {
+                            showNextStar();
+                        }
+                    } else {
+                        updateHistory(count);
+                    }
+                };
+                showNextStar();
+            }
         });
-    }
+
+        function updateHistory(m) {
+            if (historyList.querySelector('p')) historyList.innerHTML = '';
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `<span>${new Date().toLocaleTimeString()}</span> <span style="color:var(--gold)">Mines: ${m} ✓</span>`;
+            historyList.prepend(item);
+        }
+    });
 </script>
 
 </body>
