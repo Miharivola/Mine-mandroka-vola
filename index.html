@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="mg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mandroka Vola - Mines Predictor v2.0</title>
+    <style>
+        /* CSS - NY ENDRINY */
+        :root {
+            --primary: #38bdf8;
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #fbbf24;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 360px;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            text-align: center;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+
+        .status-box {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--primary);
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        #statusText { color: var(--accent); }
+
+        /* Grid 5x5 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 25px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+
+        .cell {
+            aspect-ratio: 1/1;
+            background: #334155;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.4rem;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-bottom: 3px solid #1e293b;
+        }
+
+        .cell.active {
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.8);
+            transform: scale(1.05);
+            border-bottom: none;
+        }
+
+        /* Controls */
+        .controls {
+            margin-bottom: 20px;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-dark);
+            color: white;
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            margin-top: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button {
+            background: linear-gradient(to right, #38bdf8, #0ea5e9);
+            color: #0f172a;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+        }
+
+        button:active { transform: scale(0.96); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* History */
+        .history {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            text-align: left;
+            border-top: 1px solid #334155;
+            padding-top: 15px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>MANDROKA VOLA</h1>
+        
+        <div class="status-box">
+            SYSTEM STATUS: <span id="statusText">READY</span>
+        </div>
+
+        <div class="grid" id="gameGrid">
+            </div>
+
+        <div class="controls">
+            <label style="font-size: 0.8rem; color: #94a3b8;">SELECT STARS COUNT:</label>
+            <select id="starCount">
+                <option value="1">1 Star</option>
+                <option value="3">3 Stars</option>
+                <option value="5">5 Stars</option>
+                <option value="10">10 Stars</option>
+                <option value="15">15 Stars</option>
+                <option value="20" selected>20 Stars (Jackpot)</option>
+            </select>
+        </div>
+
+        <button onclick="generatePrediction()" id="mainBtn">GET PREDICTION</button>
+
+        <div class="history">
+            <strong>LAST SESSIONS:</strong>
+            <div id="historyLog">
+                <div class="history-item"><span>Session #001</span> <span>Waiting...</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* JS - NY LOGIC */
+        const grid = document.getElementById('gameGrid');
+        const statusText = document.getElementById('statusText');
+        const mainBtn = document.getElementById('mainBtn');
+        const historyLog = document.getElementById('historyLog');
+
+        // 1. Mamorona kianja 25 avy hatrany
+        for (let i = 0; i < 25; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            grid.appendChild(cell);
+        }
+
+        function generatePrediction() {
+            const cells = document.querySelectorAll('.cell');
+            const count = parseInt(document.getElementById('starCount').value);
+            
+            // Lock button & loading status
+            mainBtn.disabled = true;
+            statusText.innerText = "ALGORITHM SCANNING...";
+            statusText.style.color = "#38bdf8";
+
+            // Reset grid
+            cells.forEach(cell => {
+                cell.classList.remove('active');
+                cell.innerHTML = '';
+            });
+
+            // Fakana isa kisendrasendra
+            setTimeout(() => {
+                let picks = [];
+                while(picks.length < count) {
+                    let r = Math.floor(Math.random() * 25);
+                    if(!picks.includes(r)) picks.push(r);
+                }
+
+                // Animation fipoitran'ny kintana
+                picks.forEach((index, i) => {
+                    setTimeout(() => {
+                        cells[index].classList.add('active');
+                        cells[index].innerHTML = '⭐';
+                        
+                        // Rehefa vita ny kintana farany
+                        if(i === picks.length - 1) {
+                            statusText.innerText = "PREDICTION READY!";
+                            statusText.style.color = "#4ade80";
+                            mainBtn.disabled = false;
+                            addHistory(count);
+                        }
+                    }, i * 50); // Elanelany 50ms isaky ny kintana
+                });
+
+            }, 1200); // Fiandrasana 1.2s ho an'ny "Scan"
+        }
+
+        function addHistory(count) {
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const item = document.createElement('div');
+            item.classList.add('history-item');
+            item.innerHTML = `<span>Stars: ${count}</span> <span>${time} - OK</span>`;
+            
+            // Ampidirina eo an-tampony
+            historyLog.prepend(item);
+            
+            // Limit history to 3 items
+            if(historyLog.children.length > 3) {
+                historyLog.lastChild.remove();
+            }
+        }
+    </script>
+</body>
+</html>
