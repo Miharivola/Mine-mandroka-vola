@@ -132,6 +132,13 @@
             animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
+        .cell.bomb {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            opacity: 0.8;
+        }
+
         .history-list { max-height: 150px; overflow-y: auto; margin-top: 10px; }
         .history-item {
             background: #222;
@@ -226,7 +233,7 @@
         </div>
         <div class="step">
             <div class="step-icon">3</div>
-            <p>Tsindrio ny <strong>Predict</strong>, ary araho ireo kintana volamena.</p>
+            <p>Tsindrio ny <strong>Predict</strong>: ny kintana (⭐) no ho sokafana, ny bomba (💣) kosa no fady.</p>
         </div>
     </div>
 </div>
@@ -269,10 +276,8 @@
         }
         createGrid();
 
-        // Fametrahana ny ora amin'ny format 24h amin'ny voalohany
         function updateDefaultTime() {
             const now = new Date();
-            // Format 24h: HH:MM:SS
             const h = String(now.getHours()).padStart(2, '0');
             const m = String(now.getMinutes()).padStart(2, '0');
             const s = String(now.getSeconds()).padStart(2, '0');
@@ -288,7 +293,7 @@
             
             const cells = document.querySelectorAll('.cell');
             cells.forEach(c => {
-                c.classList.remove('star');
+                c.classList.remove('star', 'bomb');
                 c.innerHTML = '<i class="fas fa-circle" style="font-size: 0.5rem"></i>';
             });
 
@@ -296,38 +301,41 @@
             const interval = setInterval(() => {
                 if (width >= 100) {
                     clearInterval(interval);
-                    startStarAnimation();
+                    startPrediction();
                 } else {
                     width += 10;
                     progBar.style.width = width + '%';
                 }
             }, 30);
 
-            function startStarAnimation() {
+            function startPrediction() {
                 progContainer.style.display = 'none';
                 progBar.style.width = '0%';
                 btn.disabled = false;
 
-                const count = parseInt(document.getElementById('mineCount').value);
-                let found = 0;
-                // Raha kely ny mines dia kintana 3 no mivoaka, raha be dia be kokoa
-                const target = count < 5 ? count + 2 : count; 
+                const mineCount = parseInt(document.getElementById('mineCount').value);
+                
+                // 1. Misafidy toerana ho an'ny mines (bomba)
+                let bombPositions = new Set();
+                while(bombPositions.size < mineCount) {
+                    bombPositions.add(Math.floor(Math.random() * 25));
+                }
 
-                const showNextStar = () => {
-                    if (found < target && found < 25) {
-                        let r = Math.floor(Math.random() * 25);
-                        if (!cells[r].classList.contains('star')) {
-                            setTimeout(() => {
-                                cells[r].classList.add('star');
-                                cells[r].innerHTML = '<i class="fas fa-star"></i>';
-                                playSfx('star');
-                                found++;
-                                showNextStar();
-                            }, 100);
-                        } else { showNextStar(); }
-                    } else { updateHistory(count); }
-                };
-                showNextStar();
+                // 2. Mampiseho ny grid feno kintana sy bomba
+                cells.forEach((cell, index) => {
+                    setTimeout(() => {
+                        if(bombPositions.has(index)) {
+                            cell.classList.add('bomb');
+                            cell.innerHTML = '<i class="fas fa-bomb"></i>';
+                        } else {
+                            cell.classList.add('star');
+                            cell.innerHTML = '<i class="fas fa-star"></i>';
+                        }
+                        playSfx('star');
+                    }, index * 30); // Mipoitra mifandimby haingana
+                });
+
+                updateHistory(mineCount);
             }
         });
 
@@ -335,7 +343,6 @@
             if (historyList.querySelector('p')) historyList.innerHTML = '';
             const item = document.createElement('div');
             item.className = 'history-item';
-            // Mampiasa ny ora ao anaty input fa tsy ny ora mivantana intsony
             item.innerHTML = `<span>${timeInput.value}</span> <span style="color:var(--gold)">Mines: ${m} ✓</span>`;
             historyList.prepend(item);
         }
